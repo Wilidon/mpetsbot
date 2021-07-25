@@ -20,9 +20,7 @@ async def thread_popcorn(thread_id, page, cookies):
             logger.debug("resp text")
             # resp = BeautifulSoup(await resp_r.text(), "lxml")
             resp = html.fromstring(await resp_r.text())
-            logger.debug("resp lxml")
             if "Вы кликаете слишком быстро." in await resp_r.text():
-                logger.debug("fast click")
                 return await thread_popcorn(thread_id, page, cookies)
             elif "Сообщений нет" in await resp_r.text():
                 logger.debug("not msg")
@@ -30,13 +28,10 @@ async def thread_popcorn(thread_id, page, cookies):
             elif "Форум/Топик не найден или был удален" in await resp_r.text():
                 logger.debug("Топик msg")
                 return {'status': 'error', 'code': 2, 'msg': 'Thread not exist'}
-            logger.debug("2")
             #a = resp.xpath('/html/body/div[6]/div/div/div/div/div/div/div/div[2]/span[1]/div/span[2]')
             a = resp.iterlinks()
             players = []
-            logger.debug("4")
             for user in a:
-                print(user)
                 if isinstance(user, bs4.element.NavigableString):
                     try:
                         user = int(user)

@@ -656,9 +656,11 @@ async def add_user_points(user_id, point=True, task_name=None):
                    f"{points} 🏮 и 1 🌼."
             # notice(text)
             crud.create_user_log(user_id, task_name, points, 1, int(time.time()))
-            item_info = await create_collection_item(user_id=user_id)
+
+            # метод добавления части коллекции
+            '''item_info = await create_collection_item(user_id=user_id)
             crud.create_collection_log(user_id=user_id, part_id=item_info['part_id'],
-                                       collection_id=item_info['collection_id'])
+                                       collection_id=item_info['collection_id'])'''
         user_stats = crud.get_user_stats(user_id)
         if await user_prizes(user_stats.personal_tasks):
             await send_user_notice(user_id, user_stats.personal_tasks)
@@ -685,6 +687,8 @@ async def add_club_points(user_id=None, club_id=None, point=True, task_name=None
                    f" {club.name} ({club_id}) {points} 🏵 и 1 🦋."
             # notice(text)
             crud.create_club_log(user_id, task_name, club_id, points, 1, int(time.time()))
+
+            # метод добавления части коллекции
             # item_info = await create_collection_item(user_id=user_id)
             # crud.create_collection_log(user_id=user_id, part_id=item_info['part_id'],
             #                          collection_id=item_info['collection_id'])

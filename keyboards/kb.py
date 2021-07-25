@@ -324,10 +324,10 @@ async def profile_kb(user, event, message="Лера, не забудь доба�
         KB.add_text_button(text="💎 Список валюты",
                            payload={"command": "currency"},
                            color=ButtonColor.PRIMARY)
-    KB.add_text_button(text="🧩Коллекции ",
+        KB.add_row()
+    '''KB.add_text_button(text="🧩Коллекции ",
                        payload={"command": "collections"},
-                       color=ButtonColor.PRIMARY)
-    KB.add_row()
+                       color=ButtonColor.PRIMARY)'''
     KB.add_text_button(text="🔽 Назад",
                        payload={"command": "menu"},
                        color=ButtonColor.PRIMARY)
