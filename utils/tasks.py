@@ -14,7 +14,7 @@ from utils import functions
 from utils.constants import gifts_name, holiday_1402, holiday_2302, holiday_1402_prizes, holiday_2302_prizes, \
     holiday_308, holiday_308_prizes, holiday_401, holiday_401_prizes, holiday_501, holiday_501_prizes
 from utils.currency import get_currency_core
-from utils.functions import get_mpets_api
+from utils.functions import get_mpets_api, notice
 
 
 async def check_task(user, user_task, progress, task_name):
@@ -1276,3 +1276,71 @@ async def checking_holiday_tasks():
         except Exception as e:
             logger.error(e)
             await asyncio.sleep(10)
+
+
+def get_next_user(users):
+    for user in users:
+        yield user
+
+
+async def get_wipe_text_user_rating():
+    counter, hidden = 1, False
+    top_users_stats = crud.get_users_stats_order_by_points(limit=30)
+    text = "🧑‍ Рейтинг игроков \n\n"
+    if not top_users_stats:
+        return "Рейтинг пуст"
+    users = get_next_user(users=top_users_stats)
+    last_points = None
+    while counter <= 10:
+        try:
+            user_stats = next(users)
+        except StopIteration as e:
+            break
+
+        top_user = crud.get_user(user_stats.user_id)
+        if last_points is None:
+            # Если в рейтинге есть пользователь с 50 очков и более,
+            # то активируется более "продвинутый" рейтинг.
+            if user_stats.points <= 49:
+                last_points = None
+            else:
+                last_points = user_stats.points
+            text += f"{counter}. {top_user.name} ( {top_user.user_id} ) — {user_stats.points} 🏅\n"
+            counter += 1
+        elif last_points == user_stats.points:
+            last_points = user_stats.points
+            text += f"  {top_user.name} ( {top_user.user_id} ) — {user_stats.points} 🏅\n"
+        else:
+            last_points = user_stats.points
+            text += f"{counter}. {top_user.name} ( {top_user.user_id} ) — {user_stats.points} 🏅\n"
+            counter += 1
+    return text
+
+
+async def get_wipe_text_club_rating():
+    counter = 1
+    clubs = crud.get_clubs_stats_order_by_tasks(limit=1000)
+    text = "🏠 Рейтинг клубов.\n\n"
+    if not clubs:
+        return "❗ Рейтинг пуст."
+    for club_stats in clubs:
+        club = crud.get_club(club_stats.club_id)
+        text += f"{counter}. {club.name} ( {club.club_id} ) — {club_stats.total_tasks} ⛱/" \
+                f"{club_stats.points}🎈\n"
+        counter += 1
+    return text
+
+
+async def wipe():
+    wipe = False
+    while True:
+        today = int(datetime.today().strftime("%m%d"))
+        if wipe is True:
+            await asyncio.sleep(3600)
+            continue
+        if today == 725:
+            notice(await get_wipe_text_user_rating())
+            notice(await get_wipe_text_club_rating())
+            crud.wipe()
+            wipe = True
+        await asyncio.sleep(10)
