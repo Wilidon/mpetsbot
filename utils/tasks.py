@@ -1319,7 +1319,7 @@ async def get_wipe_text_user_rating():
 
 async def get_wipe_text_club_rating():
     counter = 1
-    clubs = crud.get_clubs_stats_order_by_tasks(limit=1000)
+    clubs = crud.get_clubs_stats_order_by_points()
     text = "🏠 Рейтинг клубов.\n\n"
     if not clubs:
         return "❗ Рейтинг пуст."
@@ -1338,7 +1338,7 @@ async def wipe():
         if wipe is True:
             await asyncio.sleep(3600)
             continue
-        if today == 726:
+        if today == 809:
             notice(await get_wipe_text_user_rating())
             notice(await get_wipe_text_club_rating())
             crud.wipe()
