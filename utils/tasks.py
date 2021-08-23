@@ -13,7 +13,6 @@ from sql import crud
 from utils import functions
 from utils.constants import gifts_name, holiday_1402, holiday_2302, holiday_1402_prizes, holiday_2302_prizes, \
     holiday_308, holiday_308_prizes, holiday_401, holiday_401_prizes, holiday_501, holiday_501_prizes
-from utils.currency import get_currency_core
 from utils.functions import get_mpets_api, notice
 
 

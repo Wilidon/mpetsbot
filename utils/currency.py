@@ -17,9 +17,7 @@ async def thread_popcorn(thread_id, page, cookies):
         async with ClientSession(cookies=cookies, timeout=ClientTimeout(total=20)) as session:
             resp_r = await session.get("http://mpets.mobi/thread", params={'id': thread_id, 'page': page})
             await session.close()
-            logger.debug("resp text")
-            # resp = BeautifulSoup(await resp_r.text(), "lxml")
-            resp = html.fromstring(await resp_r.text())
+            resp = BeautifulSoup(await resp_r.text(), "lxml")
             if "Вы кликаете слишком быстро." in await resp_r.text():
                 return await thread_popcorn(thread_id, page, cookies)
             elif "Сообщений нет" in await resp_r.text():
@@ -28,10 +26,10 @@ async def thread_popcorn(thread_id, page, cookies):
             elif "Форум/Топик не найден или был удален" in await resp_r.text():
                 logger.debug("Топик msg")
                 return {'status': 'error', 'code': 2, 'msg': 'Thread not exist'}
-            #a = resp.xpath('/html/body/div[6]/div/div/div/div/div/div/div/div[2]/span[1]/div/span[2]')
-            a = resp.iterlinks()
+            users = resp.find("div", {"class": "thread_content"})
+            users = users.find("span", {"style": "color: #4b1a0a;"}).descendants
             players = []
-            for user in a:
+            for user in users:
                 if isinstance(user, bs4.element.NavigableString):
                     try:
                         user = int(user)
@@ -56,7 +54,8 @@ async def thread_popcorn(thread_id, page, cookies):
 
 
 async def parce_popcorn(pet_id, thread_id, mpets):
-    cookie = await mpets.get_cookie()
+    cookie = await mpets.get_cookies()
+    logger.debug(f"cookies {cookie}")
     users = await thread_popcorn(thread_id=thread_id, page=1, cookies=cookie)
     logger.debug(f"Response parce_popcorn {users}")
     if users['status'] == 'error':
@@ -106,7 +105,7 @@ async def thread_plus(thread_id, page, cookies):
 
 
 async def parce_plus(pet_id, thread_id, mpets):
-    cookie = await mpets.get_cookie()
+    cookie = await mpets.get_cookies()
     users = await thread_plus(thread_id=thread_id, page=1, cookies=cookie)
     logger.debug(f"Response parce_plus {users}")
     if users['status'] == 'error':
@@ -160,7 +159,7 @@ async def thread_silver(thread_id, page, cookies):
 
 
 async def parce_silver(pet_id, thread_id, mpets):
-    cookie = await mpets.get_cookie()
+    cookie = await mpets.get_cookies()
     users = await thread_silver(thread_id=thread_id, page=1, cookies=cookie)
     logger.debug(f"Response parce_silver {users}")
     if users['status'] == 'error':
@@ -205,7 +204,7 @@ async def thread_feather(thread_id, page, cookies):
 
 
 async def parce_feather(name, thread_id, mpets):
-    cookie = await mpets.get_cookie()
+    cookie = await mpets.get_cookies()
     users = await thread_feather(thread_id=thread_id, page=1, cookies=cookie)
     logger.debug(f"Response parce_feather {users}")
     if users['status'] == 'error':
@@ -254,7 +253,7 @@ async def thread_key(thread_id, page, cookies):
 
 
 async def parce_key(club_id, thread_id, mpets):
-    cookie = await mpets.get_cookie()
+    cookie = await mpets.get_cookies()
     users = await thread_key(thread_id=thread_id, page=1, cookies=cookie)
     logger.debug(f"Response parce_key {users}")
     if users['status'] == 'error':
@@ -305,7 +304,7 @@ async def thread_angel(players, thread_id, page, cookies):
 
 
 async def parce_angel(pet_id, thread_ids, mpets):
-    cookie = await mpets.get_cookie()
+    cookie = await mpets.get_cookies()
     players = []
     for thread_id in thread_ids:
         users = await thread_angel(players=players, thread_id=thread_id, page=1, cookies=cookie)
@@ -320,9 +319,9 @@ async def parce_angel(pet_id, thread_ids, mpets):
 
 async def get_currency(pet_id, name, club_id):
     thread_ids = {"popcorn": 2557447,
-                  "plus": 2572662,
+                  "plus": 2562610,
                   "silver": 2573189,
-                  "feather": 2604937,
+                  "feather": 2610317,
                   "key": 2570823,
                   "angel": [2501851, 2501843, 2501844, 2501845, 2501846, 2501849,
                             2501856, 2501855, 2501854, 2501853, 2501852, 2531821],
@@ -423,113 +422,3 @@ async def get_currency(pet_id, name, club_id):
            f"Связка ключей: {key} 🗝\n" \
            f"Ангелы: {angel} 👼"
     return text
-
-
-async def get_currency_core(user):
-    thread_ids = {"popcorn": 2557447,
-                  "plus": 2572662,
-                  "silver": 2573189,
-                  "feather": 2603855,
-                  "key": 2570823,
-                  "angel": [2501851, 2501843, 2501844, 2501845, 2501846, 2501849,
-                            2501856, 2501855, 2501854, 2501853, 2501852, 2531821],
-                  "gear": [2531790]}
-    pet_id = user.pet_id
-    name = user.name
-    club_id = user.club_id
-    mpets = MpetsApi()
-    r = await mpets.start()
-    logger.debug(f"Аккаунт зарегистрировал {r}")
-
-    # ПОПКОРН
-    r = await mpets.thread(thread_id=2557447)
-    logger.debug(r)
-    user = await parce_popcorn(pet_id=pet_id,
-                               thread_id=thread_ids.get("popcorn"),
-                               mpets=mpets)
-    if user is None or user is False:
-        popcorn = 0
-    else:
-        popcorn = user[1]
-    logger.debug("Собрал ПОПКОРН")
-
-    # ПЛЮСЫ
-    user = await parce_plus(pet_id=pet_id,
-                            thread_id=thread_ids.get("plus"),
-                            mpets=mpets)
-    if user is None or user is False:
-        plus = 0
-    else:
-        plus = user[1]
-    logger.debug("Собрал ПЛЮСЫ")
-
-    # СЕРЕБРО
-
-    user = await parce_silver(pet_id=pet_id,
-                              thread_id=thread_ids.get("silver"),
-                              mpets=mpets)
-    if user is None or user is False:
-        silver = 0
-    else:
-        silver = user[1]
-    logger.debug("Собрал СЕРЕБРО")
-
-    # ЗОЛОТЫЕ ПЕРЬЯ
-
-    user = await parce_feather(name=name,
-                               thread_id=thread_ids.get("feather"),
-                               mpets=mpets)
-    if user is None or user is False:
-        feather = 0
-    else:
-        feather = user[1]
-    logger.debug("Собрал ЗОЛОТЫЕ ПЕРЬЯ")
-
-    # СВЯЗКА КЛЮЧЕЙ
-
-    user = await parce_key(club_id=club_id,
-                           thread_id=thread_ids.get("key"),
-                           mpets=mpets)
-    if user is None or user is False:
-        key = 0
-    else:
-        key = user[1]
-    logger.debug("Собрал СВЯЗКА КЛЮЧЕЙ")
-
-    # АНГЕЛЫ
-
-    user = await parce_angel(pet_id=pet_id,
-                             thread_ids=thread_ids.get("angel"),
-                             mpets=mpets)
-    if user is None or user is False:
-        angel = 0
-    else:
-        angel = user[1]
-
-    logger.debug("Собрал АНГЕЛЫ")
-
-    # ШЕСТЕРНИ
-
-    '''user = await parce_angel(pet_id=pet_id,
-                             thread_ids=thread_ids.get("angel"),
-                             mpets=mpets)
-    if user is None or user is False:
-        angel = 0
-    else:
-        angel = user[1]'''
-
-    text = "💎 Ваша валюта.\n\n" \
-           f"Попкорн: {popcorn} 🍿\n" \
-           f"Плюсы: {plus} ➕\n" \
-           f"Серебро: {silver} 🔘\n" \
-           f"Золотые перья: {feather}\n" \
-           f"Связка ключей: {key} 🗝\n" \
-           f"Ангелы: {angel} 👼"
-    settings = get_settings()
-    bot = SimpleLongPollBot(tokens=settings.token,
-                            group_id=settings.group_id)
-    r = await bot.api_context.messages.send(user_id=485026972,
-                                            message=text,
-                                            random_id=random.randint(1,
-                                                                     9999999))
-    print(r)
