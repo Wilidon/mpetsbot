@@ -1337,7 +1337,7 @@ async def wipe():
         if wipe is True:
             await asyncio.sleep(3600)
             continue
-        if today == 823:
+        if today == 11:
             notice(await get_wipe_text_user_rating())
             notice(await get_wipe_text_club_rating())
             crud.wipe()
